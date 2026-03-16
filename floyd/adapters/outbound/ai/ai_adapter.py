@@ -8,6 +8,7 @@ from floyd.domain.entities.pull_request import PullRequest
 from floyd.domain.exceptions.pr.pr_generation_exception import PRGenerationException
 import re
 from pathlib import Path
+from importlib import resources
 
 
 class AIAdapter(AIServicePort, ABC):
@@ -21,17 +22,22 @@ class AIAdapter(AIServicePort, ABC):
         config: AIConfig,
         feedback: str | None = None,
     ) -> str:
-        template_path = Path(__file__).parent / "prompt.txt"
-
-        with open(template_path, "r", encoding="utf-8") as f:
-            template = f.read()
+        template = (
+            resources.files("floyd.adapters.outbound.ai")
+            .joinpath("prompt.txt")
+            .read_text(encoding="utf-8")
+        )
 
         diff = context.diff
 
         if config.diff_limit > 0 and len(diff) > config.diff_limit:
-            diff = diff[:config.diff_limit] + "\n\n[... DIFF TRUNCATED ...]"
+            diff = diff[: config.diff_limit] + "\n\n[... DIFF TRUNCATED ...]"
 
-        instructions = f"\nUSER-SPECIFIC INSTRUCTIONS:\n{config.pr_instructions}" if config.pr_instructions else ""
+        instructions = (
+            f"\nUSER-SPECIFIC INSTRUCTIONS:\n{config.pr_instructions}"
+            if config.pr_instructions
+            else ""
+        )
         feedback_section = f"\nUSER FEEDBACK:\n{feedback}" if feedback else ""
 
         prompt = template.replace("{{current_branch}}", context.current_branch.name)
@@ -56,9 +62,13 @@ class AIAdapter(AIServicePort, ABC):
             template = f.read()
 
         if config.diff_limit > 0 and len(diff) > config.diff_limit:
-            diff = diff[:config.diff_limit] + "\n\n[... DIFF TRUNCATED ...]"
+            diff = diff[: config.diff_limit] + "\n\n[... DIFF TRUNCATED ...]"
 
-        instructions = f"\nUSER-SPECIFIC INSTRUCTIONS:\n{config.commit_instructions}" if config.commit_instructions else ""
+        instructions = (
+            f"\nUSER-SPECIFIC INSTRUCTIONS:\n{config.commit_instructions}"
+            if config.commit_instructions
+            else ""
+        )
         feedback_section = f"\nUSER FEEDBACK:\n{feedback}" if feedback else ""
 
         prompt = template.replace("{{diff}}", diff)

@@ -11,6 +11,7 @@ dependencies = [
     "pathlib>=1.0.1",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
+    "importlib>=1.0.4",
 ]
 
 [tool.pyright]
@@ -20,3 +21,6 @@ pythonVersion = "3.14"
 
 [project.scripts]
 floyd="floyd.adapters.inbound.cli.cli_adapter:main"
+
+[tool.setuptools.package-data]
+"*" = ["*.txt"]
